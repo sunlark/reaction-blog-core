@@ -1,4 +1,4 @@
-import { Meteor } from "meteor/meteor";
+import { Meteor, EJSON } from "meteor/meteor";
 import { ValidatedMethod } from "meteor/mdg:validated-method";
 import { SimpleSchema } from "meteor/aldeed:simple-schema";
 import Posts from "./collections.js";
@@ -50,7 +50,7 @@ const postValues = new SimpleSchema({
  * @summary creates a post in blog
  * @type {ValidatedMethod}
  * @param {Object} values - post object
- * @return {String} id of created post
+ * @returns {String} id of created post
  */
 export const createPost = new ValidatedMethod({
   name: "addPost",
@@ -70,13 +70,17 @@ export const createPost = new ValidatedMethod({
  * updatePostField
  * @summary update single post field
  * @type {ValidatedMethod}
- * @param {String} _id - postId
- * @return {Boolean} post.isVisible
+ * @param {String} _id - post.id to update
+ * @param {String} field - key to update
+ * @param {*} value - update property value
+ * @returns {Number} returns update result
  */
-export const publishPost = new ValidatedMethod({
-  name: "publishPost",
+export const updatePostField = new ValidatedMethod({
+  name: "updatePostField",
   validate: new SimpleSchema({
-    _id: { type: String }
+    _id: { type: String },
+    field: { type: String },
+    value: { type: Object } // todo not sure what type it will be
   }).validator(),
   run({ _id }) {
     // must have manageBlog permissions
@@ -84,21 +88,10 @@ export const publishPost = new ValidatedMethod({
       throw new Meteor.Error(403, "Access Denied");
     }
 
-    const post = Posts.findOne(_id, {fields: {isVisible: 1}});
+    const stringValue = EJSON.stringify(value);
+    const update = EJSON.parse("{\"" + field + "\":" + stringValue + "}");
 
-    const fields = {isRecommended: !post.isRecommended};
-    // if post will be made visible, update publishedAt date 
-    if(!post.isVisible) {
-      fields.publishedAt = new Date();
-    }
-
-    // update product visibility
-    ReactionCore.Log.info("toggle post visibility ", _id, !post.isVisible);
-
-    const res = Posts.update(_id, {$set: fields});
-
-    // if collection updated we return new `isVisible` state
-    return res === 1 && !product.isVisible;
+    return Posts.update(_id, {$set: update});
   }
 });
 
@@ -107,7 +100,7 @@ export const publishPost = new ValidatedMethod({
  * @summary toggles post's visibility flag
  * @type {ValidatedMethod}
  * @param {String} _id - postId
- * @return {Boolean} post.isVisible
+ * @returns {Boolean} post.isVisible
  */
 export const publishPost = new ValidatedMethod({
   name: "publishPost",
@@ -122,19 +115,19 @@ export const publishPost = new ValidatedMethod({
 
     const post = Posts.findOne(_id, {fields: {isVisible: 1}});
     
-    const fields = {isRecommended: !post.isRecommended};
+    const fields = {isVisible: !post.isVisible};
     // if post will be made visible, update publishedAt date 
     if(!post.isVisible) {
       fields.publishedAt = new Date();
     }
 
-    // update product visibility
+    // update post visibility
     ReactionCore.Log.info("toggle post visibility ", _id, !post.isVisible);
     
     const res = Posts.update(_id, {$set: fields});
     
     // if collection updated we return new `isVisible` state
-    return res === 1 && !product.isVisible;
+    return res === 1 && !post.isVisible;
   }
 });
 
@@ -143,7 +136,7 @@ export const publishPost = new ValidatedMethod({
  * @summary toggles post's recommended flag
  * @type {ValidatedMethod}
  * @param {String} _id - postId
- * @return {*} update result
+ * @returns {*} update result
  */
 export const recommendPost = new ValidatedMethod({
   name: "recommendPost",
@@ -166,7 +159,7 @@ export const recommendPost = new ValidatedMethod({
  * @summary removes posts in blog
  * @type {ValidatedMethod}
  * @param {Array} postsIds - ids of posts to be removed
- * @return {Number} number of removed posts
+ * @returns {Number} number of removed posts
  */
 export const removePosts = new ValidatedMethod({
   name: "removePosts",
@@ -187,7 +180,7 @@ export const removePosts = new ValidatedMethod({
  * @summary update product grid positions
  * @type {ValidatedMethod}
  * @param {Object} 
- * @return {String} 
+ * @returns {String} 
  */
 export const updatePostPosition = new ValidatedMethod({
   name: "updatePostPosition",
