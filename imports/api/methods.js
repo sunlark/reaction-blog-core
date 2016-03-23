@@ -49,7 +49,7 @@ const postValues = new SimpleSchema({
  * addPost
  * @summary creates a post in blog
  * @type {ValidatedMethod}
- * @params {Object} values - post object
+ * @param {Object} values - post object
  * @return {String} id of created post
  */
 export const createPost = new ValidatedMethod({
@@ -67,10 +67,46 @@ export const createPost = new ValidatedMethod({
 });
 
 /**
+ * updatePostField
+ * @summary update single post field
+ * @type {ValidatedMethod}
+ * @param {String} _id - postId
+ * @return {Boolean} post.isVisible
+ */
+export const publishPost = new ValidatedMethod({
+  name: "publishPost",
+  validate: new SimpleSchema({
+    _id: { type: String }
+  }).validator(),
+  run({ _id }) {
+    // must have manageBlog permissions
+    if (!ReactionCore.hasPermission("manageBlog")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+
+    const post = Posts.findOne(_id, {fields: {isVisible: 1}});
+
+    const fields = {isRecommended: !post.isRecommended};
+    // if post will be made visible, update publishedAt date 
+    if(!post.isVisible) {
+      fields.publishedAt = new Date();
+    }
+
+    // update product visibility
+    ReactionCore.Log.info("toggle post visibility ", _id, !post.isVisible);
+
+    const res = Posts.update(_id, {$set: fields});
+
+    // if collection updated we return new `isVisible` state
+    return res === 1 && !product.isVisible;
+  }
+});
+
+/**
  * publishPost
  * @summary toggles post's visibility flag
  * @type {ValidatedMethod}
- * @params {String} _id - postId
+ * @param {String} _id - postId
  * @return {Boolean} post.isVisible
  */
 export const publishPost = new ValidatedMethod({
@@ -91,6 +127,10 @@ export const publishPost = new ValidatedMethod({
     if(!post.isVisible) {
       fields.publishedAt = new Date();
     }
+
+    // update product visibility
+    ReactionCore.Log.info("toggle post visibility ", _id, !post.isVisible);
+    
     const res = Posts.update(_id, {$set: fields});
     
     // if collection updated we return new `isVisible` state
@@ -102,7 +142,7 @@ export const publishPost = new ValidatedMethod({
  * recommendPost
  * @summary toggles post's recommended flag
  * @type {ValidatedMethod}
- * @params {String} _id - postId
+ * @param {String} _id - postId
  * @return {*} update result
  */
 export const recommendPost = new ValidatedMethod({
@@ -125,7 +165,7 @@ export const recommendPost = new ValidatedMethod({
  * removePosts
  * @summary removes posts in blog
  * @type {ValidatedMethod}
- * @params {Array} postsIds - ids of posts to be removed
+ * @param {Array} postsIds - ids of posts to be removed
  * @return {Number} number of removed posts
  */
 export const removePosts = new ValidatedMethod({
@@ -146,7 +186,7 @@ export const removePosts = new ValidatedMethod({
  * updatePostPosition
  * @summary update product grid positions
  * @type {ValidatedMethod}
- * @params {Object} 
+ * @param {Object} 
  * @return {String} 
  */
 export const updatePostPosition = new ValidatedMethod({

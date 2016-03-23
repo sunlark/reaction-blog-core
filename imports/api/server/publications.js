@@ -29,7 +29,7 @@ const filters = new SimpleSchema({
 
 /**
  * certain post of blog
- * @params {String} _id - id of post
+ * @param {String} _id - id of post
  * @return {Object} return post cursor
  */
 Meteor.publish("Post", function (_id) {
@@ -56,7 +56,7 @@ Meteor.publish("Post", function (_id) {
 
 /**
  * posts in blog 
- * @params {Object} postsFilter
+ * @param {Object} postsFilter
  * @return {Object} return posts cursor
  */
 
