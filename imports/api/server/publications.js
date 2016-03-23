@@ -13,6 +13,10 @@ const filters = new SimpleSchema({
     type: String,
     optional: true
   },
+  tags: {
+    type: [String],
+    optional: true
+  },
   visibility: {
     type: Boolean,
     optional: true
@@ -51,77 +55,62 @@ Meteor.publish("Post", function (_id) {
 });
 
 /**
- * posts of blog
- * @params {Boolean} recommendedOnly
+ * posts in blog 
+ * @params {Object} postsFilter
  * @return {Object} return posts cursor
  */
-Meteor.publish("Posts", function (recommendedOnly = false) {
-  check(recommendedOnly, Boolean);
 
-  const shopId = ReactionCore.getShopId();
-  if (! shopId) {
-    return this.ready();
-  }
-
-  let selector = { };
-  selector.isVisible = true;
-  if(recommendedOnly) {
-    selector.isRecommended = true;
-  }
-  // todo get posts by tag
-
-  // simple user can see only visible post, admin user - any post
-  if (Roles.userIsInRole(this.userId, ["owner", "admin", "manageBlog"],
-      shopId)) {
-    selector.isVisible = {
-      $in: [true, false]
-    };
-  }
-
-  return Posts.find(selector, {order: {publishedAt: -1}});
-});
-
-/**
- * all posts in blog
- * @params {Object} postsFilter
- */
-
-Meteor.publish("AllPosts", function (postsFilter) {
+Meteor.publish("Posts", function (postsFilter) {
   check(postsFilter, Match.OneOf(undefined, filters));
   
   const shopId = ReactionCore.getShopId();
   if (!shopId) {
     return this.ready();
   }
-
+  
+  const isAdmin = Roles.userIsInRole(this.userId, 
+    ["admin", "owner", "managePosts"], shopId);
   
   let selector = { shopId: shopId };
+  selector.isVisible = true;
+  if(isAdmin) {
+    selector.isVisible = {
+      $in: [true, false]
+    };
+  }
+  
   if(postsFilter) {
-    // filter by query
+    // filter by query todo check syntax
     if(postsFilter.query) {
       const cond = {
         $regex: postsFilter.query,
         $options: "i"
       };
-      //selector todo
+      selector["$or"] = [{
+          title: cond
+        }, {
+          pageTitle: cond
+        }, {
+          keywords: cond
+        }, {
+          body: cond
+      }
+      ]
     }
 
     // todo filter by tag
-    
-    if(postsFilter.visibility !== undefined) { // todo
-      selector.isVisible = postsFilter.visibility;
+
+    if(postsFilter.recomendation !== undefined) { // todo check 'if'
+      selector.isRecommended = postsFilter.recomendation;
     }
 
-    if(postsFilter.recomendation !== undefined) { // todo
-      selector.isRecommended = postsFilter.recomendation;
+    // only admins can set visibility filter. 
+    if(postsFilter.visibility !== undefined && isAdmin) { // todo check 'if'
+      selector.isVisible = postsFilter.visibility;
     }
   }
   
   // todo pagination?
-  // global admin can get all accounts
   // todo sort by positions
-  if (Roles.userIsInRole(this.userId, ["admin", "owner", "managePosts"], shopId)) {
-    return Posts.find(selector, {sort: {createdAt: -1}});
-  }
-  return this.ready();
+  return Posts.find(selector, {sort: {publishedAt: -1}});
 });

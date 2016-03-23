@@ -82,5 +82,12 @@ ReactionCore.Schemas.Posts = new SimpleSchema({
   publishedAt: {
     type: Date,
     optional: true
+  },
+  updatedAt: {
+    type: Date,
+    autoValue: function () {
+      return new Date;
+    },
+    optional: true
   }
 });
