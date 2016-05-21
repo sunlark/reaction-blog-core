@@ -5,15 +5,12 @@ ReactionCore.registerPackage({
   name: "reaction-blog-core",
   icon: "fa fa-book",
   autoEnable: true,
-  /*settings: {
-    
-  },*/
   registry: [{
     provides: "dashboard",
     // template: "commentsDashboard",
     label: "Blog",
-    description: "Server part of blog functionality", // todo
-    icon: "fa fa-blog",
+    description: "Server part to manage posts",
+    icon: "fa fa-book",
     priority: 2,
     container: "utilities",
     permissions: [{

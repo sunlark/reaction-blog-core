@@ -3,12 +3,12 @@ Package.describe({
   version: "0.0.1"
 });
 
-Npm.depends({
-  "i18next": "2.3.5"
-});
+// Npm.depends({
+//   "i18next": "2.3.5"
+// });
 
 Package.onUse(function (api) {
-  api.versionsFrom("METEOR@1.3-rc.4");
+  api.versionsFrom("1.3.1");
   api.use("meteor-base");
   api.use("mongo");
   api.use("ecmascript");
@@ -26,12 +26,12 @@ Package.onUse(function (api) {
   api.mainModule("client/main.js", "client");
   api.mainModule("server/main.js", "server");
 
-  api.addAssets("private/data/i18n/en.json", "server");
-  api.addAssets("private/data/i18n/ru.json", "server");
+  // api.addAssets("private/data/i18n/en.json", "server");
+  // api.addAssets("private/data/i18n/ru.json", "server");
 });
 
 Package.onTest(function (api) {
-  api.versionsFrom("METEOR@1.3-rc.4");
+  api.versionsFrom("METEOR@1.3.1");
   api.use("meteor-base");
   api.use("mongo");
   api.use("ecmascript");
@@ -41,8 +41,8 @@ Package.onTest(function (api) {
   api.use("check");
   api.use("aldeed:simple-schema");
   api.use("mdg:validated-method");
-//  api.use('avital:mocha@2.1.0_10'); 
-  api.use('practicalmeteor:mocha@2.1.1-rc.1');
+//  api.use('avital:mocha@2.1.0_10');
+  api.use("practicalmeteor:mocha@2.1.1-rc.1");
   api.use("sunlark:reaction-blog-core");
   api.use("reactioncommerce:reaction-factories@0.4.2");
   api.use("reactioncommerce:core@0.12.0");

@@ -1,14 +1,12 @@
 import { Mongo } from "meteor/mongo";
-import { ReactionCore } from "meteor/reactioncommerce:core";
-import "./schema";
+// import { ReactionCore } from "meteor/reactioncommerce:core";
+import PostSchema from "./schema";
 
 const Posts = new Mongo.Collection("Posts");
+Posts.attachSchema(PostSchema);
 
-Posts.attachSchema(ReactionCore.Schemas.Posts);
-
-// Deny all client-side updates since we will be using methods to manage 
+// Deny all client-side updates since we will be using methods to manage
 // this collection
-
 Posts.deny({
   insert() { return true; },
   update() { return true; },

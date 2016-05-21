@@ -3,16 +3,16 @@ import { ReactionCore } from "meteor/reactioncommerce:core";
 
 // todo labels. i18n for labels??
 
-ReactionCore.Schemas.Posts = new SimpleSchema({
+const PostSchema = new SimpleSchema({
   _id: {
     type: String
   },
-  shopId: {
-    type: String,
-    index: 1,
-    autoValue: ReactionCore.shopIdAutoValue,
-    label: "Post shopId"
-  },
+  // shopId: {
+  //   type: String,
+  //   index: 1,
+  //   autoValue: ReactionCore.shopIdAutoValue,
+  //   label: "Post shopId"
+  // },
   title: {
     type: String,
     defaultValue: "",
@@ -47,11 +47,16 @@ ReactionCore.Schemas.Posts = new SimpleSchema({
     }
   },
   annotation: {
-    type: String,
+    type: Object,
+    // blackbox used because of the same reason like in `content`
+    blackbox: true,
     optional: true
   },
-  body: {
-    type: String
+  content: {
+    type: Object,
+    // blackbox needed for cases when our body could be managed via Draft.js or
+    // MediumEditor or some other similar app.
+    blackbox: true
   },
   positions: {
     type: [ReactionCore.Schemas.ProductPosition],
@@ -91,3 +96,5 @@ ReactionCore.Schemas.Posts = new SimpleSchema({
     optional: true
   }
 });
+
+export default PostSchema;
