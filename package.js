@@ -26,8 +26,8 @@ Package.onUse(function (api) {
   api.mainModule("client/main.js", "client");
   api.mainModule("server/main.js", "server");
 
-  // api.addAssets("private/data/i18n/en.json", "server");
-  // api.addAssets("private/data/i18n/ru.json", "server");
+  api.addAssets("private/data/i18n/en.json", "server");
+  api.addAssets("private/data/i18n/ru.json", "server");
 });
 
 Package.onTest(function (api) {

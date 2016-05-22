@@ -5,7 +5,9 @@
   "translation": {
     "reaction-blog-core": {
       "settings": {
-
+        "defaultTag": "Ярлык по умолчанию",
+        "defaultTagTitle": "Ярлык, который будет использован в качестве категории по умолчанию для новых публикаций",
+        "blogSettingsUpdated": "Настройки блога обновлены."
       }
     }
   }

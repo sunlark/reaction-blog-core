@@ -5,14 +5,18 @@ ReactionCore.registerPackage({
   name: "reaction-blog-core",
   icon: "fa fa-book",
   autoEnable: true,
+  settings: {
+    defaultTag: "blog"
+  },
   registry: [{
-    provides: "dashboard",
-    // template: "commentsDashboard",
     label: "Blog",
+    name: "blog",
     description: "Server part to manage posts",
     icon: "fa fa-book",
+    provides: "dashboard",
     priority: 2,
     container: "utilities",
+    // template: "commentsDashboard",
     permissions: [{
       label: "Blog",
       permission: "manageBlog"
@@ -20,8 +24,13 @@ ReactionCore.registerPackage({
   }, {
     label: "Blog Settings",
     route: "/dashboard/blog/settings",
+    // name: "blog/settings",
     provides: "settings",
     container: "dashboard",
     template: "blogSettings"
+    // permissions: [{
+    //   label: "Blog Settings",
+    //   permission: "blogSettings"
+    // }]
   }]
 });

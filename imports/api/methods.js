@@ -1,4 +1,5 @@
-import { Meteor, EJSON } from "meteor/meteor";
+import { Meteor } from "meteor/meteor";
+// import { EJSON } from "meteor/ejson";
 import { ValidatedMethod } from "meteor/mdg:validated-method";
 import { SimpleSchema } from "meteor/aldeed:simple-schema";
 import { ReactionCore } from "meteor/reactioncommerce:core";
@@ -51,11 +52,10 @@ import PostSchema from "./schema";
  * createPost
  * @summary creates an empty post object for blog
  * @type {ValidatedMethod}
- * @param {Object} values - post object
  * @return {String} id of created post
  */
 export const create = new ValidatedMethod({
-  name: "Posts.create",
+  name: "blog.posts.create",
   validate: null,
   run() {
     // must have manageBlog permissions
@@ -63,6 +63,36 @@ export const create = new ValidatedMethod({
       throw new Meteor.Error(403, "Access Denied");
     }
     return Posts.insert({}, { validate: false });
+  }
+});
+
+/**
+ * updateSettings
+ * @summary update blog settings
+ * @type {ValidatedMethod}
+ * @param {Object} values - object with blog settings from form
+ * @return {Number} mongodb update results
+ */
+export const updateSettings = new ValidatedMethod({
+  name: "blog.settings.update",
+  validate: new SimpleSchema({
+    defaultTag: { type: String }
+  }).validator(),
+  run(values) {
+    // must have manageBlog permissions
+    if (!ReactionCore.hasPermission("reaction-blog-core/blogSettings")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+    // TODO maybe we should send shopId from the client side, because I'm not sure,
+    // we got it in correct way here, on server side
+    const shopId = ReactionCore.getShopId();
+
+    return ReactionCore.Collections.Packages.update({
+      name: "reaction-blog-core",
+      shopId: shopId
+    }, {
+      $set: { settings: values }
+    });
   }
 });
 

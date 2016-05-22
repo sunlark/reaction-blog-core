@@ -5,7 +5,9 @@
   "translation": {
     "reaction-blog-core": {
       "settings": {
-
+        "defaultTag": "Default Tag",
+        "defaultTagTitle": "Tag which will be used as category for all posts by default",
+        "blogSettingsUpdated": "Blog settings updated."
       }
     }
   }
