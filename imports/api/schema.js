@@ -72,6 +72,11 @@ const PostSchema = new SimpleSchema({
     index: 1,
     defaultValue: false
   },
+  hashtags: {
+    type: [String],
+    optional: true,
+    index: 1
+  },
   createdAt: {
     type: Date,
     autoValue: function () {

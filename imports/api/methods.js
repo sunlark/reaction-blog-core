@@ -4,7 +4,7 @@ import { ValidatedMethod } from "meteor/mdg:validated-method";
 import { SimpleSchema } from "meteor/aldeed:simple-schema";
 import { ReactionCore } from "meteor/reactioncommerce:core";
 import Posts from "./collections";
-import PostSchema from "./schema";
+// import PostSchema from "./schema";
 
 // const postValues = new SimpleSchema({
 //   title: {
@@ -93,6 +93,40 @@ export const updateSettings = new ValidatedMethod({
     }, {
       $set: { settings: values }
     });
+  }
+});
+
+export const addTag = new ValidatedMethod({
+  name: "blog.posts.addTag",
+  validate: new SimpleSchema({
+    postId: { type: String },
+    tagName: { type: String }
+  }).validator(),
+  run({ postId, tagName }) {
+    // must have manageBlog permissions
+    if (!ReactionCore.hasPermission("manageBlog")) {
+      throw new Meteor.Error("blog.posts.addTag.accessDenied",
+        "You don't have permissions to add tag to this post.");
+    }
+
+    // tag could be undefined
+    const existingTag = ReactionCore.Collections.Tags.findOne({ name: tagName });
+    // `existingTag` should always be defined
+    if (!existingTag) {
+      throw new Meteor.Error("blog.posts.addTag.tagNotFound", "Tag not found.");
+    }
+    const postHasTag = Posts.find({
+      _id: postId,
+      hashtags: {
+        $in: [existingTag._id]
+      }
+    }).count();
+    if (postHasTag) {
+      throw new Meteor.Error("blog.posts.addTag.existingTag", "Existing Tag, Update Denied.");
+    }
+
+    debugger;
+    return Posts.update({ _id: postId }, { $push: { hashtags: existingTag._id }});
   }
 });
 
