@@ -1,5 +1,13 @@
 import { SimpleSchema } from "meteor/aldeed:simple-schema";
 import { ReactionCore } from "meteor/reactioncommerce:core";
+import { Meteor } from "meteor/meteor";
+
+let getSlug;
+if (Meteor.isClient) {
+  getSlug = slugString => slugString && TR.slugify(slugString);
+} else if (Meteor.isServer) {
+  getSlug = slugString => slugString && Transliteration.slugify(slugString);
+}
 
 // todo labels. i18n for labels??
 
@@ -7,25 +15,25 @@ const PostSchema = new SimpleSchema({
   _id: {
     type: String
   },
-  // shopId: {
-  //   type: String,
-  //   index: 1,
-  //   autoValue: ReactionCore.shopIdAutoValue,
-  //   label: "Post shopId"
-  // },
+  shopId: {
+    type: String,
+    index: 1,
+    autoValue: ReactionCore.shopIdAutoValue,
+    label: "Post shopId"
+  },
   title: {
     type: String,
     defaultValue: "",
     index: 1   // todo check indexes
   },
-  pageTitle: {
-    type: String,
-    optional: true
-  },
-  keywords: {
-    type: String,
-    optional: true
-  },
+  // pageTitle: {
+  //   type: String,
+  //   optional: true
+  // },
+  // keywords: {
+  //   type: String,
+  //   optional: true
+  // },
   metaDescription: {
     type: String,
     optional: true
@@ -34,17 +42,17 @@ const PostSchema = new SimpleSchema({
     type: String,
     optional: true,
     index: 1,
-    autoValue: function () {
-      let slug = this.value ||  getSlug(this.siblingField("title").value) || 
-        this.siblingField("_id").value || "";
-      if (this.isInsert) {
-        return slug;
-      } else if (this.isUpsert) {
-        return {
-          $setOnInsert: slug
-        };
-      }
-    }
+    // autoValue: function () {
+    //   const slug = this.value ||  getSlug(this.siblingField("title").value) ||
+    //     this.siblingField("_id").value || "";
+    //   if (this.isInsert) {
+    //     return slug;
+    //   } else if (this.isUpsert) {
+    //     return {
+    //       $setOnInsert: slug
+    //     };
+    //   }
+    // }
   },
   annotation: {
     type: Object,

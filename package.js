@@ -17,11 +17,15 @@ Package.onUse(function (api) {
   api.use("ejson");
   api.use("logging");
   api.use("check");
+  api.use("alanning:roles");
   api.use("aldeed:simple-schema");
   api.use("mdg:validated-method");
   api.use("random");
   api.use("ddp-rate-limiter");
   api.use("underscore");
+
+  api.use("reactioncommerce:core@0.13.0");
+  // api.use("reactioncommerce:reaction-schemas@2.0.5");
 
   api.mainModule("client/main.js", "client");
   api.mainModule("server/main.js", "server");

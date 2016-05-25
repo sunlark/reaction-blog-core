@@ -8,6 +8,24 @@
         "defaultTag": "Default Tag",
         "defaultTagTitle": "Tag which will be used as category for all posts by default",
         "blogSettingsUpdated": "Blog settings updated."
+      },
+      "post": {
+        "postManagement": "Post management",
+        "hide": "Hide",
+        "isNotVisible": "This post is not visible to visitors. Don't forget to ",
+        "publishIt": "publish it.",
+        "published": "Published",
+        "lastUpdated": "Last updated",
+        "deleteThisPost": "Delete this post?",
+        "deleteSelectedPosts": "Delete selected posts?",
+        "deleteError": "There was an error deleting {{post}}.",
+        "deleteErrorThePost": "the post",
+        "deleteErrorTheSelectedPosts": "the selected posts",
+        "deletedAlert": "Deleted {{post}}",
+        "deletedAlert_plural": "Deleted {{post}}",
+        "thePost": "the post",
+        "theSelectedPosts": "the selected posts",
+        "titleMissing": "Impossible to publish post. Title missing."
       }
     }
   }

@@ -55,14 +55,54 @@ import Posts from "./collections";
  * @return {String} id of created post
  */
 export const create = new ValidatedMethod({
-  name: "blog.posts.create",
+  name: "blog.create",
   validate: null,
   run() {
-    // must have manageBlog permissions
     if (!ReactionCore.hasPermission("manageBlog")) {
       throw new Meteor.Error(403, "Access Denied");
     }
     return Posts.insert({}, { validate: false });
+  }
+});
+
+/**
+ * deletePosts
+ * @summary removes a list of posts
+ * @type {ValidatedMethod}
+ * @param {Array} postIds - an array with posts _ids
+ * @return {Number} of successfully removed documents
+ */
+export const deletePosts = new ValidatedMethod({
+  name: "blog.deletePosts",
+  validate: new SimpleSchema({
+    postIds: { type: [String] }
+  }).validator(),
+  run({ postIds }) {
+    if (!ReactionCore.hasPermission("manageBlog")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+    return Posts.remove({ _id: { $in: postIds } });
+  }
+});
+
+/**
+ * deleteMedia
+ * @summary removes media documents related to removed posts
+ * @type {ValidatedMethod}
+ * @param {Array} postIds - an array with removed posts _ids
+ * @return {Number} of successfully removed media documents
+ */
+export const deleteMedia = new ValidatedMethod({
+  name: "blog.deleteMedia",
+  validate: new SimpleSchema({
+    postIds: { type: [String] }
+  }).validator(),
+  run({ postIds }) {
+    if (!ReactionCore.hasPermission("manageBlog")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+// TODO: complete this method
+    // return Posts.remove({ _id: { $in: postIds } });
   }
 });
 
@@ -74,7 +114,7 @@ export const create = new ValidatedMethod({
  * @return {Number} mongodb update results
  */
 export const updateSettings = new ValidatedMethod({
-  name: "blog.settings.update",
+  name: "blog.updateSettings",
   validate: new SimpleSchema({
     defaultTag: { type: String }
   }).validator(),
@@ -97,13 +137,12 @@ export const updateSettings = new ValidatedMethod({
 });
 
 export const addTag = new ValidatedMethod({
-  name: "blog.posts.addTag",
+  name: "blog.addTag",
   validate: new SimpleSchema({
     postId: { type: String },
     tagName: { type: String }
   }).validator(),
   run({ postId, tagName }) {
-    // must have manageBlog permissions
     if (!ReactionCore.hasPermission("manageBlog")) {
       throw new Meteor.Error("blog.posts.addTag.accessDenied",
         "You don't have permissions to add tag to this post.");
@@ -125,7 +164,6 @@ export const addTag = new ValidatedMethod({
       throw new Meteor.Error("blog.posts.addTag.existingTag", "Existing Tag, Update Denied.");
     }
 
-    debugger;
     return Posts.update({ _id: postId }, { $push: { hashtags: existingTag._id }});
   }
 });
@@ -158,42 +196,59 @@ export const addTag = new ValidatedMethod({
 //     return Posts.update(_id, {$set: update});
 //   }
 // });
-//
-// /**
-//  * publishPost
-//  * @summary toggles post's visibility flag
-//  * @type {ValidatedMethod}
-//  * @param {String} _id - postId
-//  * @returns {Boolean} post.isVisible
-//  */
-// export const publishPost = new ValidatedMethod({
-//   name: "publishPost",
-//   validate: new SimpleSchema({
-//     _id: { type: String }
-//   }).validator(),
-//   run({ _id }) {
-//     // must have manageBlog permissions
-//     if (!ReactionCore.hasPermission("manageBlog")) {
-//       throw new Meteor.Error(403, "Access Denied");
-//     }
-//
-//     const post = Posts.findOne(_id, {fields: {isVisible: 1}});
-//
-//     const fields = {isVisible: !post.isVisible};
-//     // if post will be made visible, update publishedAt date
-//     if(!post.isVisible) {
-//       fields.publishedAt = new Date();
-//     }
-//
-//     // update post visibility
-//     ReactionCore.Log.info("toggle post visibility ", _id, !post.isVisible);
-//
-//     const res = Posts.update(_id, {$set: fields});
-//
-//     // if collection updated we return new `isVisible` state
-//     return res === 1 && !post.isVisible;
-//   }
-// });
+
+/**
+ * publishPost
+ * @summary toggles post's visibility flag
+ * @type {ValidatedMethod}
+ * @param {String} _id - postId
+ * @returns {Boolean} post.isVisible
+ */
+export const publishPosts = new ValidatedMethod({
+  name: "blog.publishPosts",
+  validate: new SimpleSchema({
+    postIds: { type: [String] }
+  }).validator(),
+  run({ postIds }) {
+    if (!ReactionCore.hasPermission("manageBlog")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+debugger;
+    const posts = Posts.find({
+      _id: { $in: postIds }
+    }, {
+      fields: { title: 1, isVisible: 1 }
+    });
+
+    return posts.map(post => {
+      // we need to do small validation here.
+      // post title is required
+      if (post && post.title.length < 1) {
+        ReactionCore.Log.warn(`Impossible to publish post: ${post._id}. Title missing.`);
+        throw new Meteor.Error("blog.publishPost.titleMissing",
+          "Impossible to publish post. Title missing.");
+      }
+      const newVisibilityState = !post.isVisible;
+      const fields = { isVisible: newVisibilityState };
+      // if we change state to "visible", we also want to update publishedAt date
+      if(newVisibilityState) {
+        fields.publishedAt = new Date();
+      }
+
+      // update post visibility
+      ReactionCore.Log.info("toggle post visibility ", post._id, newVisibilityState);
+
+      const res = Posts.update(post._id, { $set: fields });
+
+      // if collection updated we return new `isVisible` state
+      return res === 1 && {
+        _id: post._id,
+        title: post.title,
+        isVisible: newVisibilityState
+      };
+    });
+  }
+});
 //
 // /**
 //  * recommendPost

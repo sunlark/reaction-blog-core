@@ -1,8 +1,11 @@
-/* eslint-disable prefer-arrow-callback */
-
 import { Meteor } from "meteor/meteor";
 import { ReactionCore } from "meteor/reactioncommerce:core";
+import { SimpleSchema } from "meteor/aldeed:simple-schema";
+import { Roles } from "meteor/alanning:roles";
+import { check, Match } from "meteor/check";
 import Posts from "../collections.js";
+
+const MAX_POSTS = 48;
 
 //
 // define search filters as a schema so we can validate
@@ -27,76 +30,86 @@ const filters = new SimpleSchema({
   }
 });
 
-/**
- * certain post of blog
- * @param {String} _id - id of post
- * @returns {Object} return post cursor
- */
-Meteor.publish("Post", function (_id) {
-  check(_id, String);
+Meteor.publish("Post", function (postId) {
+  check(postId, String);
 
   const shopId = ReactionCore.getShopId();
-  if (! shopId) {
+  if (!shopId) {
     return this.ready();
   }
 
-  let selector = { "_id": _id };
-  selector.isVisible = true;
+  let selector = { isVisible: true };
 
   // simple user can see only visible post, admin user - any post
-  if (Roles.userIsInRole(this.userId, ["owner", "admin", "manageBlog"],
-      shopId)) {
+  if (Roles.userIsInRole(this.userId, ["owner", "admin", "manageBlog"], shopId)) {
     selector.isVisible = {
       $in: [true, false]
+    };
+  }
+
+  if (postId.match(/^[A-Za-z0-9]{17}$/)) {
+    selector._id = postId;
+  } else {
+    selector.handle = {
+      $regex: postId,
+      $options: "i"
     };
   }
 
   return Posts.find(selector);
 });
 
-/**
- * posts in blog 
- * @param {Object} postsFilter
- * @returns {Object} return posts cursor
- */
+Meteor.publish("Posts", function (limit = 24, postsFilter = {}, sort = { publishedAt: -1 }) {
+  check(limit, Match.Optional(Number));
+  check(postsFilter, Match.Optional(Object));
+  check(sort, Match.Optional(Object));
+  // FIXME we need to get rid of audit-argument-check to make this work
+  // new SimpleSchema({
+  //   limit: { type: Number, optional: true },
+  //   sort: { type: Object, optional: true, blackbox: true }
+  // }).validate({ limit, sort });
 
-Meteor.publish("Posts", function (postsFilter) {
-  check(postsFilter, Match.OneOf(undefined, filters));
-  
   const shopId = ReactionCore.getShopId();
   if (!shopId) {
     return this.ready();
   }
-  
-  const isAdmin = Roles.userIsInRole(this.userId, 
-    ["admin", "owner", "managePosts"], shopId);
-  
-  let selector = { shopId: shopId };
+
+  const isAdmin = Roles.userIsInRole(this.userId, ["admin", "owner", "managePosts"], shopId);
+
+  let selector = { shopId };
   selector.isVisible = true;
   if(isAdmin) {
     selector.isVisible = {
       $in: [true, false]
     };
   }
-  
+
   if(postsFilter) {
-    // filter by query todo check syntax
-    if(postsFilter.query) {
-      const cond = {
-        $regex: postsFilter.query,
-        $options: "i"
-      };
-      selector["$or"] = [{
-          title: cond
-        }, {
-          pageTitle: cond
-        }, {
-          keywords: cond
-        }, {
-          body: cond
-      }
-      ]
+    // filter by tags
+    if (postsFilter.tags) {
+      Object.assign(selector, {
+        hashtags: {
+          $in: postsFilter.tags
+        }
+      });
     }
+
+    // filter by query todo check syntax
+    // if(postsFilter.query) {
+    //   const cond = {
+    //     $regex: postsFilter.query,
+    //     $options: "i"
+    //   };
+    //   selector["$or"] = [{
+    //       title: cond
+    //     }, {
+    //       pageTitle: cond
+    //     }, {
+    //       keywords: cond
+    //     }, {
+    //       body: cond
+    //   }]
+    // }
 
     // todo filter by tag
 
@@ -104,13 +117,16 @@ Meteor.publish("Posts", function (postsFilter) {
       selector.isRecommended = postsFilter.recomendation;
     }
 
-    // only admins can set visibility filter. 
+    // only admins can set visibility filter.
     if(postsFilter.visibility !== undefined && isAdmin) { // todo check 'if'
       selector.isVisible = postsFilter.visibility;
     }
   }
-  
+
   // todo pagination?
   // todo sort by positions
-  return Posts.find(selector, {sort: {publishedAt: -1}});
+  return Posts.find(selector, {
+    sort: sort,
+    limit: Math.min(limit, MAX_POSTS)
+  });
 });
