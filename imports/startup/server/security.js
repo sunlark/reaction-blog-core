@@ -3,21 +3,28 @@ import { DDPRateLimiter } from "meteor/ddp-rate-limiter";
 import * as methods from "../../api/methods";
 import { _ } from "meteor/underscore";
 
-const COMMENTS_METHODS = [];
+// Don't let people write arbitrary data to their 'profile' field from the client
+Meteor.users.deny({
+  update() {
+    return true;
+  }
+});
+
+const BLOG_METHODS = [];
 
 _.each(methods, (method) => {
   // push only methods objects
-  method.name && COMMENTS_METHODS.push(method.name);
+  method.name && BLOG_METHODS.push(method.name);
 });
 
 if (Meteor.isServer) {
-  const commentRule = {
+  // Only allow 2 login attempts per connection per 5 seconds
+  DDPRateLimiter.addRule({
     name(name) {
-      return COMMENTS_METHODS.some(method => method === name);
+      return _.contains(BLOG_METHODS, name);
     },
-    type: "method"
-  };
 
-  // Only allow 5 operations per connection per second
-  DDPRateLimiter.addRule(commentRule, 5, 1000);
+    // Rate limit per connection ID
+    connectionId() { return true; }
+  }, 2, 5000);
 }

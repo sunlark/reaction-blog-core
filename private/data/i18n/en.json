@@ -26,6 +26,9 @@
         "thePost": "the post",
         "theSelectedPosts": "the selected posts",
         "titleMissing": "Impossible to publish post. Title missing."
+      },
+      "fields": {
+        "title": "Title"
       }
     }
   }

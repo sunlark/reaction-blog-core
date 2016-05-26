@@ -3,9 +3,9 @@ Package.describe({
   version: "0.0.1"
 });
 
-// Npm.depends({
-//   "i18next": "2.3.5"
-// });
+Npm.depends({
+  // transliteration: "1.0.5"
+});
 
 Package.onUse(function (api) {
   api.versionsFrom("1.3.1");
@@ -26,6 +26,7 @@ Package.onUse(function (api) {
 
   api.use("reactioncommerce:core@0.13.0");
   // api.use("reactioncommerce:reaction-schemas@2.0.5");
+  api.use("ongoworks:transliteration@0.1.1");
 
   api.mainModule("client/main.js", "client");
   api.mainModule("server/main.js", "server");

@@ -75,11 +75,11 @@ const PostSchema = new SimpleSchema({
     index: 1,
     defaultValue: false
   },
-  isRecommended: {
-    type: Boolean,
-    index: 1,
-    defaultValue: false
-  },
+  // isRecommended: {
+  //   type: Boolean,
+  //   index: 1,
+  //   defaultValue: false
+  // },
   hashtags: {
     type: [String],
     optional: true,

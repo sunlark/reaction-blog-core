@@ -1,52 +1,27 @@
 import { Meteor } from "meteor/meteor";
-// import { EJSON } from "meteor/ejson";
+import { EJSON } from "meteor/ejson";
 import { ValidatedMethod } from "meteor/mdg:validated-method";
 import { SimpleSchema } from "meteor/aldeed:simple-schema";
 import { ReactionCore } from "meteor/reactioncommerce:core";
+import { check, Match } from "meteor/check";
+import { Transliteration } from "meteor/ongoworks:transliteration";
 import Posts from "./collections";
+import { createHandle/*, getSlug*/ } from "./helpers";
 // import PostSchema from "./schema";
 
-// const postValues = new SimpleSchema({
-//   title: {
-//     type: String,
-//     defaultValue: ""
-//   },
-//   pageTitle: {
-//     type: String,
-//     optional: true
-//   },
-//   keywords: {
-//     type: String,
-//     optional: true
-//   },
-//   metaDescription: {
-//     type: String,
-//     optional: true
-//   },
-//   annotation: {
-//     type: String,
-//     optional: true
-//   },
-//   body: {
-//     type: String
-//   },
-//   positions: {
-//     type: [ReactionCore.Schemas.ProductPosition],
-//     optional: true
-//   },
-//   isVisible: {
-//     type: Boolean,
-//     optional: true
-//   },
-//   isRecommended: {
-//     type: Boolean,
-//     optional: true
-//   },
-//   publishedAt: {
-//     type: Date,
-//     optional: true
-//   }
-// });
+// FIXME remove this after npm version will be fixed. Currently it has this line
+// `codemap[offset] = require(`../../data/x${offset.toString(16)}.json`);`
+// which can't find file
+let getSlug;
+if (Meteor.isClient) {
+  getSlug = function (slugString) {
+    return slugString && TR.slugify(slugString);
+  };
+} else if (Meteor.isServer) {
+  getSlug = function (slugString) {
+    return slugString && Transliteration.slugify(slugString);
+  };
+}
 
 /**
  * createPost
@@ -111,7 +86,7 @@ export const deleteMedia = new ValidatedMethod({
  * @summary update blog settings
  * @type {ValidatedMethod}
  * @param {Object} values - object with blog settings from form
- * @return {Number} mongodb update results
+ * @return {Number} mongodb update result
  */
 export const updateSettings = new ValidatedMethod({
   name: "blog.updateSettings",
@@ -168,34 +143,41 @@ export const addTag = new ValidatedMethod({
   }
 });
 
-// /**
-//  * updatePostField
-//  * @summary update single post field
-//  * @type {ValidatedMethod}
-//  * @param {String} _id - post.id to update
-//  * @param {String} field - key to update
-//  * @param {*} value - update property value
-//  * @returns {Number} returns update result
-//  */
-// export const updatePostField = new ValidatedMethod({
-//   name: "updatePostField",
-//   validate: new SimpleSchema({
-//     _id: { type: String },
-//     field: { type: String },
-//     value: { type: Object } // todo not sure what type it will be
-//   }).validator(),
-//   run({ _id }) {
-//     // must have manageBlog permissions
-//     if (!ReactionCore.hasPermission("manageBlog")) {
-//       throw new Meteor.Error(403, "Access Denied");
-//     }
-//
-//     const stringValue = EJSON.stringify(value);
-//     const update = EJSON.parse("{\"" + field + "\":" + stringValue + "}");
-//
-//     return Posts.update(_id, {$set: update});
-//   }
-// });
+/**
+ * updatePostField
+ * @summary update single post field
+ * @type {ValidatedMethod}
+ * @param {String} _id - post.id to update
+ * @param {String} field - key to update
+ * @param {*} value - update property value
+ * @returns {Number} mongodb update result
+ */
+export const updatePostField = new ValidatedMethod({
+  name: "blog.updatePostField",
+  validate({ postId, field, value }) {
+    check(postId, String);
+    check(field, String);
+    check(value, Match.OneOf(String, Object, Array, Boolean));
+  },
+  // validate: new SimpleSchema({
+  //   postId: { type: String },
+  //   newFieldContent: { type: Object, blackbox: true }
+  //   // field: { type: String },
+  //   // value: { type: Match.OneOf(String, Object, Array, Boolean) } // todo not sure what type it will be
+  // }).validator(),
+  run({ postId, field, value }) {
+    // must have manageBlog permissions
+    if (!ReactionCore.hasPermission("manageBlog")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+    // TODO this is taken from `products/updateProductField`. Do we need this
+    // here or it could be simplified in a simple object?
+    const stringValue = EJSON.stringify(value);
+    const update = EJSON.parse("{\"" + field + "\":" + stringValue + "}");
+
+    return Posts.update(postId, { $set: update });
+  }
+});
 
 /**
  * publishPost
@@ -213,7 +195,7 @@ export const publishPosts = new ValidatedMethod({
     if (!ReactionCore.hasPermission("manageBlog")) {
       throw new Meteor.Error(403, "Access Denied");
     }
-debugger;
+
     const posts = Posts.find({
       _id: { $in: postIds }
     }, {
@@ -249,6 +231,33 @@ debugger;
     });
   }
 });
+
+/**
+ * updateHandle
+ * @summary
+ * @type {ValidatedMethod}
+ * @param {String} postId - post _id
+ * @return {String} new handle
+ */
+export const updateHandle = new ValidatedMethod({
+  name: "blog.updateHandle",
+  validate: new SimpleSchema({
+    postId: { type: String }
+  }).validator(),
+  run({ postId }) {
+    if (!ReactionCore.hasPermission("manageBlog")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+    const post = Posts.findOne(postId, { fields: { title: 1 } });
+    const handle = createHandle(getSlug(post.title), postId);
+
+    const res = Posts.update(postId, {$set: { handle }});
+
+    // if updated successfully -- return new handle, else return result with Error
+    return res === 1 ? handle : res;
+  }
+});
+
 //
 // /**
 //  * recommendPost
