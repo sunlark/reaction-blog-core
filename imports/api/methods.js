@@ -111,6 +111,14 @@ export const updateSettings = new ValidatedMethod({
   }
 });
 
+/**
+ * addTag
+ * @summary adds new tag to post
+ * @type {ValidatedMethod}
+ * @param {String} postId - post _id
+ * @param {String} tagName - added tag name
+ * @return {Number} mongodb update result
+ */
 export const addTag = new ValidatedMethod({
   name: "blog.addTag",
   validate: new SimpleSchema({
@@ -140,6 +148,30 @@ export const addTag = new ValidatedMethod({
     }
 
     return Posts.update({ _id: postId }, { $push: { hashtags: existingTag._id }});
+  }
+});
+
+/**
+ * removeTag
+ * @summary removes tag from post
+ * @type {ValidatedMethod}
+ * @param {String} postId - post _id
+ * @param {String} tagId - tag _id
+ * @return {Number} mongodb update result
+ */
+export const removeTag = new ValidatedMethod({
+  name: "blog.removeTag",
+  validate: new SimpleSchema({
+    postId: { type: String },
+    tagId: { type: String }
+  }).validator(),
+  run({ postId, tagId }) {
+    if (!ReactionCore.hasPermission("manageBlog")) {
+      throw new Meteor.Error("blog.posts.removeTag.accessDenied",
+        "You don't have permissions to remove tag from this post.");
+    }
+
+    return Posts.update(postId, { $pull: { hashtags: tagId } });
   }
 });
 

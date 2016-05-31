@@ -41,7 +41,7 @@ const PostSchema = new SimpleSchema({
   handle: {
     type: String,
     optional: true,
-    index: 1,
+    index: 1
     // autoValue: function () {
     //   const slug = this.value ||  getSlug(this.siblingField("title").value) ||
     //     this.siblingField("_id").value || "";
@@ -55,10 +55,7 @@ const PostSchema = new SimpleSchema({
     // }
   },
   annotation: {
-    type: Object,
-    // blackbox used because of the same reason like in `content`
-    blackbox: true,
-    optional: true
+    type: String
   },
   content: {
     type: Object,

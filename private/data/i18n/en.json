@@ -15,6 +15,7 @@
         "isNotVisible": "This post is not visible to visitors. Don't forget to ",
         "publishIt": "publish it.",
         "published": "Published",
+        "publish": "Publish",
         "lastUpdated": "Last updated",
         "deleteThisPost": "Delete this post?",
         "deleteSelectedPosts": "Delete selected posts?",
@@ -25,7 +26,8 @@
         "deletedAlert_plural": "Deleted {{post}}",
         "thePost": "the post",
         "theSelectedPosts": "the selected posts",
-        "titleMissing": "Impossible to publish post. Title missing."
+        "titleMissing": "Impossible to publish post. Title missing.",
+        "contentShouldNotBeEmpty": "Content should not be empty."
       },
       "fields": {
         "title": "Title"

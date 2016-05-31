@@ -4,7 +4,7 @@ Package.describe({
 });
 
 Npm.depends({
-  // transliteration: "1.0.5"
+  // transliteration: "1.0.6"
 });
 
 Package.onUse(function (api) {

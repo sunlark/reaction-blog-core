@@ -15,3 +15,11 @@ ReactionCore.MethodHooks.after("blog.deletePosts", function (options) {
   throw new Meteor.Error("blog.posts.deletePosts.nothing-was-deleted",
     "Something went wrong, nothing was deleted");
 });
+
+ReactionCore.MethodHooks.after("blog.removeTag", function (options) {
+  if (options.error) {
+    ReactionCore.Log.warn("Error while removing tag from post", options.error.reason);
+    return options.error;
+  }
+  return options.result;
+});
